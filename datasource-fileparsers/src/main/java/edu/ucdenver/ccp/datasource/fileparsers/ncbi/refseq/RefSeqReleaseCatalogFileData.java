@@ -39,14 +39,15 @@ import org.apache.log4j.Logger;
 
 import edu.ucdenver.ccp.common.collections.CollectionsUtil;
 import edu.ucdenver.ccp.common.file.reader.Line;
+import edu.ucdenver.ccp.datasource.fileparsers.CcpExtensionOntology;
 import edu.ucdenver.ccp.datasource.fileparsers.License;
 import edu.ucdenver.ccp.datasource.fileparsers.Record;
 import edu.ucdenver.ccp.datasource.fileparsers.RecordField;
 import edu.ucdenver.ccp.datasource.fileparsers.SingleLineFileRecord;
 import edu.ucdenver.ccp.datasource.identifiers.DataSource;
-import edu.ucdenver.ccp.datasource.identifiers.ncbi.gene.GiNumberID;
-import edu.ucdenver.ccp.datasource.identifiers.ncbi.refseq.RefSeqID;
-import edu.ucdenver.ccp.datasource.identifiers.ncbi.taxonomy.NcbiTaxonomyID;
+import edu.ucdenver.ccp.datasource.identifiers.impl.bio.GiNumberID;
+import edu.ucdenver.ccp.datasource.identifiers.impl.bio.NcbiTaxonomyID;
+import edu.ucdenver.ccp.datasource.identifiers.impl.bio.RefSeqID;
 
 /**
  * Representation of data from the RefSeq RefSeq-release#.catalog.gz file
@@ -54,31 +55,31 @@ import edu.ucdenver.ccp.datasource.identifiers.ncbi.taxonomy.NcbiTaxonomyID;
  * @author Bill Baumgartner
  * 
  */
-@Record(dataSource = DataSource.REFSEQ,
+@Record(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD, dataSource = DataSource.REFSEQ,
 		comment="http://www.ncbi.nih.gov/RefSeq/, ftp://ftp.ncbi.nlm.nih.gov/refseq/release/release-catalog/README",
 		license=License.NCBI,
 		citation="NCBI Reference Sequences (RefSeq): current status, new features and genome annotation policy. Pruitt KD, Tatusova T, Brown GR, Maglott DR. Nucleic Acids Res. 2012 Jan;40(Database issue):D130-5., The NCBI handbook [Internet]. Bethesda (MD): National Library of Medicine (US), National Center for Biotechnology Information; 2002 Oct. Chapter 18, The Reference Sequence (RefSeq) Project. Available from http://www.ncbi.nlm.nih.gov/books/NBK21091 ",
 		label="rel. catalog record")
 public class RefSeqReleaseCatalogFileData extends SingleLineFileRecord {
 	private static final Logger logger = Logger.getLogger(RefSeqReleaseCatalogFileData.class);
-	@RecordField
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___TAXONOMY_IDENTIFIER_FIELD_VALUE)
 	private final NcbiTaxonomyID taxId;
-	@RecordField
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___SPECIES_NAME_FIELD_VALUE)
 	private final String speciesName;
-	@RecordField(comment="", isKeyField=true)
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___REFSEQ_IDENTIFIER_FIELD_VALUE, isKeyField=true)
 	private final RefSeqID refseqId;
 
-	@RecordField(comment="")
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___GENEINFO_IDENTIFIER_FIELD_VALUE)
 	private final GiNumberID gi;
-	@RecordField
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___RELEASE_DIRECTORY_INCLUSION_FIELD_VALUE)
 	private final String releaseDirectoryInclusion;
-	@RecordField(comment=" refseq status: na - not available; status codes are not applied to most genomic records, INFERRED, PREDICTED, PROVISIONAL, VALIDATED, REVIEWED, MODEL, UNKNOWN - status code not provided; however usually is provided for this type of record")
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___REFSEQ_STATUS_FIELD_VALUE)
 	private final String refseqStatus;
-	@RecordField
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___LENGTH_FIELD_VALUE)
 	private final int length;
-	@RecordField
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___MOLECULE_TYPE_FIELD_VALUE)
 	private final String moleculeType;
-	@RecordField
+	@RecordField(ontClass = CcpExtensionOntology.REFSEQ_CATALOG_RECORD___IS_PREDICTED_FIELD_VALUE)
 	private final boolean isPredicted;
 
 	public RefSeqReleaseCatalogFileData(NcbiTaxonomyID taxId, String speciesName, RefSeqID refseqId, GiNumberID gi,
@@ -101,7 +102,7 @@ public class RefSeqReleaseCatalogFileData extends SingleLineFileRecord {
 	 */
 	private boolean getIsPredicted(RefSeqID refseqId) {
 		Set<String> predictedPrefixes = CollectionsUtil.createSet("XM", "XR", "XP", "ZP");
-		String prefix = refseqId.getDataElement().substring(0, 2);
+		String prefix = refseqId.getId().substring(0, 2);
 		return predictedPrefixes.contains(prefix);
 	}
 
@@ -114,7 +115,7 @@ public class RefSeqReleaseCatalogFileData extends SingleLineFileRecord {
 		Set<String> rnaPrefixes = CollectionsUtil.createSet("NR", "XR");
 		Set<String> mrnaPrefixes = CollectionsUtil.createSet("NM", "XM");
 		Set<String> proteinPrefixes = CollectionsUtil.createSet("AP", "NP", "YP", "XP", "ZP", "WP");
-		String prefix = refseqId.getDataElement().substring(0, 2);
+		String prefix = refseqId.getId().substring(0, 2);
 		if (genomicPrefixes.contains(prefix))
 			return "Genomic";
 		if (rnaPrefixes.contains(prefix))
@@ -123,7 +124,7 @@ public class RefSeqReleaseCatalogFileData extends SingleLineFileRecord {
 			return "mRNA";
 		if (proteinPrefixes.contains(prefix))
 			return "Protein";
-		throw new IllegalArgumentException("Unknown RefSeq prefix: " + refseqId.getDataElement());
+		throw new IllegalArgumentException("Unknown RefSeq prefix: " + refseqId.getId());
 	}
 
 	public NcbiTaxonomyID getTaxId() {
